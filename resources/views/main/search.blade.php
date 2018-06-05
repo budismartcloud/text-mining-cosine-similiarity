@@ -95,6 +95,16 @@
                     </div>
                     <br>
                 @endforeach
+
+                <br><br>
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination">
+                    @for($i = 1; $i <= $totalPage; $i++)
+                            <li class="page-item"><a class="page-link" href="{{url('/search?keyword=')}}{{$keyword}}&p={{$i}}">1</a></li>
+                    @endfor
+                    </ul>
+                </nav>
+
             @endif
         </div>
     </div>

@@ -39,39 +39,75 @@ class MainController extends Controller
     public function actionSearch(Request $request)
     {
         $keyword = $request->get('keyword');
+        $page = $request->get('p');
+        if(is_null($page)){
+            $page = 1;
+        }
+
         try{
-            $result = $this->mining($keyword);
+            $result = $this->mining($keyword, $page);
+            $totalPage = $result['totalData'];
+            if($totalPage > 0 && $totalPage <= 5){
+                $totalPage = 1;
+            }elseif ($totalPage > 5){
+                $totalPage = $totalPage % 5;
+            }
+
         }catch (\Exception $e){
             $result = [];
+            $totalPage = 0;
         }
 
         $params = [
             'keyword' => $keyword,
-            'data' => $result
+            'data' => $result['data'],
+            'p' => $page,
+            'totalPage' => $totalPage
         ];
         return view('main.search', $params);
     }
 
 
-    private function mining($keyword)
+    private function mining($keyword, $page)
     {
         $splitedWord = explode(" ",$keyword);
         $splitedWord = $this->filteringProcess($splitedWord);
         $result = $this->analyzingProcess($splitedWord);
         $filterId = [];
         $stringOrderd = "";
+        $offset = 5 * $page;
+
         foreach ($result as $num => $item)
         {
             if($item['sumOfScore'] > 0.0){
                 $filterId[] = $item['metadata_id'];
-                $stringOrderd .= $item['metadata_id'];
-                $stringOrderd .= ",";
+            }
+        }
+
+
+        $totalData = count($filterId);
+        foreach ($filterId as $num => $item){
+            if($totalData > 5){
+                if($num < $offset){
+                    continue;
+                }else{
+                    $stringOrderd .= $item;
+                    $stringOrderd .= ",";
+                }
+            }else{
+                if($totalData <= 5  && $offset <= $totalData){
+                    $stringOrderd .= $item;
+                    $stringOrderd .= ",";
+                }elseif($totalData <= 5  && $page == 1){
+                    $stringOrderd .= $item;
+                    $stringOrderd .= ",";
+                }
             }
         }
 
         $stringOrderd .= "0";
 
-        $resultData = MetaData::whereRaw("id IN (".$stringOrderd.") ORDER BY FIELD(".$stringOrderd.")")
+        $resultData = MetaData::whereRaw("id IN (".$stringOrderd.")")
             ->get()->toArray();
 
 
@@ -83,7 +119,12 @@ class MainController extends Controller
 
         $displayedData = collect($displayedData)->sortKeys();
 
-        return $displayedData;
+        $params = [
+            'data' => $displayedData,
+            'totalData' => $totalData
+        ];
+
+        return $params;
 
     }
 
