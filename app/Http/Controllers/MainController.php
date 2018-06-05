@@ -50,7 +50,12 @@ class MainController extends Controller
             if($totalPage > 0 && $totalPage <= 5){
                 $totalPage = 1;
             }elseif ($totalPage > 5){
-                $totalPage = $totalPage % 5;
+                $tmpTotalPage = floor($totalPage / 5);
+                if($totalPage %5 > 0){
+                    $tmpTotalPage += 1;
+                }
+
+                $totalPage = $tmpTotalPage;
             }
 
         }catch (\Exception $e){
@@ -75,7 +80,7 @@ class MainController extends Controller
         $result = $this->analyzingProcess($splitedWord);
         $filterId = [];
         $stringOrderd = "";
-        $offset = 5 * $page;
+        $offset = 5 * ($page - 1);
 
         foreach ($result as $num => $item)
         {
@@ -84,25 +89,28 @@ class MainController extends Controller
             }
         }
 
-
         $totalData = count($filterId);
+        $selectedData = 0;
         foreach ($filterId as $num => $item){
-            if($totalData > 5){
-                if($num < $offset){
-                    continue;
+            if($selectedData < 5){
+                if($totalData > 5){
+                    if($num < $offset){
+                        continue;
+                    }else{
+                        $stringOrderd .= $item;
+                        $stringOrderd .= ",";
+                    }
                 }else{
-                    $stringOrderd .= $item;
-                    $stringOrderd .= ",";
-                }
-            }else{
-                if($totalData <= 5  && $offset <= $totalData){
-                    $stringOrderd .= $item;
-                    $stringOrderd .= ",";
-                }elseif($totalData <= 5  && $page == 1){
-                    $stringOrderd .= $item;
-                    $stringOrderd .= ",";
+                    if($totalData <= 5  && $offset <= $totalData){
+                        $stringOrderd .= $item;
+                        $stringOrderd .= ",";
+                    }elseif($totalData <= 5  && $page == 1){
+                        $stringOrderd .= $item;
+                        $stringOrderd .= ",";
+                    }
                 }
             }
+            $selectedData++;
         }
 
         $stringOrderd .= "0";
