@@ -13,3 +13,8 @@
 
 Route::get('/', 'MainController@actionIndex');
 Route::get('/search', 'MainController@actionSearch');
+
+Route::group(['prefix' => '/correlation', 'namespace' => 'Correlation'], function (){
+    Route::get('/', 'CorrelationController@actionIndex');
+    Route::get('/search', 'CorrelationController@actionSearch');
+});
